@@ -10,6 +10,7 @@
 		"test:types": "cd type-tests && tsc",
 		"test": "vitest run",
 		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz",
+    "preinstall": "pnpm build",
 		"publish": "npm publish package.tgz"
 	},
 	"main": "./index.cjs",

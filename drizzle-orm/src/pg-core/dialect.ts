@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { aliasedTable, aliasedTableColumn, mapColumnsInAliasedSQLToAlias, mapColumnsInSQLToAlias } from '~/alias.ts';
 import { CasingCache } from '~/casing.ts';
 import { Column } from '~/column.ts';
@@ -55,6 +56,10 @@ import { ViewBaseConfig } from '~/view-common.ts';
 import type { PgSession } from './session.ts';
 import { PgViewBase } from './view-base.ts';
 import type { PgMaterializedView } from './view.ts';
+
+function shortAlias(name: string):string {
+  return createHash('shake256', { outputLength: 4 }).update(name).digest('hex');
+}
 
 export interface PgDialectConfig {
 	casing?: Casing;
@@ -1282,7 +1287,7 @@ export class PgDialect {
 				const normalizedRelation = normalizeRelation(schema, tableNamesMap, relation);
 				const relationTableName = getTableUniqueName(relation.referencedTable);
 				const relationTableTsName = tableNamesMap[relationTableName]!;
-				const relationTableAlias = `${tableAlias}_${selectedRelationTsKey}`;
+				const relationTableAlias = `${tableAlias}_${shortAlias(selectedRelationTsKey)}`;
 				const joinOn = and(
 					...normalizedRelation.fields.map((field, i) =>
 						eq(
@@ -1338,7 +1343,7 @@ export class PgDialect {
 				sql.join(
 					selection.map(({ field, tsKey, isJson }) =>
 						isJson
-							? sql`${sql.identifier(`${tableAlias}_${tsKey}`)}.${sql.identifier('data')}`
+							? sql`${sql.identifier(`${tableAlias}_${shortAlias(tsKey)}`)}.${sql.identifier('data')}`
 							: is(field, SQL.Aliased)
 							? field.sql
 							: field
